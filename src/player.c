@@ -380,6 +380,14 @@ scrobble_cb(void *arg)
 
   lastfm_scrobble(*id);
 }
+
+static void
+lastfm_nowplaying_cb(void *arg)
+{
+  int *id = arg;
+
+  lastfm_updatenowplaying(*id);
+}
 #endif
 
 // This is just to be able to log the caller in a simple way
@@ -1084,6 +1092,15 @@ static void
 event_play_start()
 {
   DPRINTF(E_DBG, L_PLAYER, "event_play_start()\n");
+
+  int id = (int)pb_session.playing_now->id;
+
+  if (id != DB_MEDIA_FILE_NON_PERSISTENT_ID)
+    {
+#ifdef LASTFM
+      worker_execute(lastfm_nowplaying_cb, &id, sizeof(int), 8);
+#endif
+    }
 
   if (!pb_session.metadata_sent)
     {

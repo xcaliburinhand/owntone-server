@@ -165,6 +165,15 @@ scrobble_cb(void *arg)
 
   lastfm_scrobble(*id);
 }
+
+/* Callback from the worker thread (async operation as it may block) */
+static void
+lastfm_nowplaying_cb(void *arg)
+{
+  int *id = arg;
+
+  lastfm_updatenowplaying(*id);
+}
 #endif
 
 /*
@@ -1329,6 +1338,10 @@ httpd_stream_file(struct evhttp_request *req, int id)
   evcon = evhttp_request_get_connection(req);
 
   evhttp_connection_set_closecb(evcon, stream_fail_cb, st);
+
+#ifdef LASTFM
+  worker_execute(lastfm_nowplaying_cb, &st->id, sizeof(int), 1);
+#endif
 
   DPRINTF(E_INFO, L_HTTPD, "Kicking off streaming for %s\n", mfi->path);
 
