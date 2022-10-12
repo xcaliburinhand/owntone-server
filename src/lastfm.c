@@ -253,7 +253,7 @@ request_post(const char *url, struct keyval *kv, char **errmsg)
 }
 
 static int
-scrobble(int id)
+posttrack(int id, char method[25])
 {
   struct media_file_info *mfi;
   struct keyval *kv;
@@ -295,7 +295,7 @@ scrobble(int id)
 	  (keyval_add(kv, "api_key", lastfm_api_key) == 0) &&
 	  (keyval_add(kv, "artist", mfi->artist) == 0) &&
 	  (keyval_add(kv, "duration", duration) == 0) &&
-	  (keyval_add(kv, "method", "track.scrobble") == 0) &&
+	  (keyval_add(kv, "method", method) == 0) &&
 	  (keyval_add(kv, "sk", lastfm_session_key) == 0) &&
 	  (keyval_add(kv, "timestamp", timestamp) == 0) &&
 	  (keyval_add(kv, "track", mfi->title) == 0) &&
@@ -311,7 +311,7 @@ scrobble(int id)
       return -1;
     }
 
-  DPRINTF(E_INFO, L_LASTFM, "Scrobbling '%s' by '%s'\n", keyval_get(kv, "track"), keyval_get(kv, "artist"));
+  DPRINTF(E_INFO, L_LASTFM, "'%s' '%s' by '%s'\n", keyval_get(kv, "method"), keyval_get(kv, "track"), keyval_get(kv, "artist"));
 
   ret = request_post(api_url, kv, NULL);
 
@@ -321,80 +321,6 @@ scrobble(int id)
   return ret;
 
  noscrobble:
-  free_mfi(mfi, 0);
-
-  return -1;
-}
-
-static int
-update_now_playing(int id)
-{
-  struct media_file_info *mfi;
-  struct keyval *kv;
-  char duration[4];
-  char trackNumber[4];
-  char timestamp[16];
-  int ret;
-
-  mfi = db_file_fetch_byid(id);
-  if (!mfi)
-    {
-      DPRINTF(E_LOG, L_LASTFM, "Update now playing failed, track id %d is unknown\n", id);
-      return -1;
-    }
-
-  // Don't update songs which are shorter than 30 sec
-  if (mfi->song_length < 30000)
-    goto noupdate;
-
-  // Don't send non-music and radio stations
-  if ((mfi->media_kind != MEDIA_KIND_MUSIC) || (mfi->data_kind == DATA_KIND_HTTP))
-    goto noupdate;
-
-  // Don't send songs with unknown artist
-  if (strcmp(mfi->artist, CFG_NAME_UNKNOWN_ARTIST) == 0)
-    goto noupdate;
-
-  kv = keyval_alloc();
-  if (!kv)
-    goto noupdate;
-
-  snprintf(duration, sizeof(duration), "%" PRIu32, mfi->song_length);
-  snprintf(trackNumber, sizeof(trackNumber), "%" PRIu32, mfi->track);
-  snprintf(timestamp, sizeof(timestamp), "%" PRIi64, (int64_t)time(NULL));
-
-  ret = (
-	  (keyval_add(kv, "album", mfi->album) == 0) &&
-	  (keyval_add(kv, "albumArtist", mfi->album_artist) == 0) &&
-	  (keyval_add(kv, "api_key", lastfm_api_key) == 0) &&
-	  (keyval_add(kv, "artist", mfi->artist) == 0) &&
-	  (keyval_add(kv, "duration", duration) == 0) &&
-	  (keyval_add(kv, "method", "track.updateNowPlaying") == 0) &&
-	  (keyval_add(kv, "sk", lastfm_session_key) == 0) &&
-	  (keyval_add(kv, "timestamp", timestamp) == 0) &&
-	  (keyval_add(kv, "track", mfi->title) == 0) &&
-	  (keyval_add(kv, "trackNumber", trackNumber) == 0)
-      );
-
-  free_mfi(mfi, 0);
-
-  if (!ret)
-    {
-      keyval_clear(kv);
-      free(kv);
-      return -1;
-    }
-
-  DPRINTF(E_INFO, L_LASTFM, "LastFM Now playing '%s' by '%s'\n", keyval_get(kv, "track"), keyval_get(kv, "artist"));
-
-  ret = request_post(api_url, kv, NULL);
-
-  keyval_clear(kv);
-  free(kv);
-
-  return ret;
-
- noupdate:
   free_mfi(mfi, 0);
 
   return -1;
@@ -481,7 +407,7 @@ lastfm_scrobble(int id)
   if (lastfm_disabled)
     return -1;
 
-  return scrobble(id);
+  return posttrack(id, "track.scrobble");
 }
 
 /* Thread: worker */
@@ -494,7 +420,7 @@ lastfm_updatenowplaying(int id)
   if (lastfm_disabled)
     return -1;
 
-  return update_now_playing(id);
+  return posttrack(id, "track.updateNowPlaying");
 }
 
 /* Thread: httpd */
