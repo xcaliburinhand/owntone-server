@@ -252,6 +252,12 @@ request_post(const char *url, struct keyval *kv, char **errmsg)
   return ret;
 }
 
+/* 
+ * Checks that a track meets the Last.fm scrobbling requirements and triggers the API request
+ *
+ * @param id The track id
+ * @param method The Last.fm api method to use
+ */
 static int
 posttrack(int id, char method[25])
 {
