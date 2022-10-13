@@ -252,8 +252,14 @@ request_post(const char *url, struct keyval *kv, char **errmsg)
   return ret;
 }
 
+/* 
+ * Checks that a track meets the Last.fm scrobbling requirements and triggers the API request
+ *
+ * @param id The track id
+ * @param method The Last.fm api method to use
+ */
 static int
-scrobble(int id)
+posttrack(int id, char method[25])
 {
   struct media_file_info *mfi;
   struct keyval *kv;
@@ -295,7 +301,7 @@ scrobble(int id)
 	  (keyval_add(kv, "api_key", lastfm_api_key) == 0) &&
 	  (keyval_add(kv, "artist", mfi->artist) == 0) &&
 	  (keyval_add(kv, "duration", duration) == 0) &&
-	  (keyval_add(kv, "method", "track.scrobble") == 0) &&
+	  (keyval_add(kv, "method", method) == 0) &&
 	  (keyval_add(kv, "sk", lastfm_session_key) == 0) &&
 	  (keyval_add(kv, "timestamp", timestamp) == 0) &&
 	  (keyval_add(kv, "track", mfi->title) == 0) &&
@@ -311,7 +317,7 @@ scrobble(int id)
       return -1;
     }
 
-  DPRINTF(E_INFO, L_LASTFM, "Scrobbling '%s' by '%s'\n", keyval_get(kv, "track"), keyval_get(kv, "artist"));
+  DPRINTF(E_INFO, L_LASTFM, "'%s' '%s' by '%s'\n", keyval_get(kv, "method"), keyval_get(kv, "track"), keyval_get(kv, "artist"));
 
   ret = request_post(api_url, kv, NULL);
 
@@ -325,7 +331,6 @@ scrobble(int id)
 
   return -1;
 }
-
 
 
 /* ---------------------------- Our lastfm API  --------------------------- */
@@ -408,7 +413,20 @@ lastfm_scrobble(int id)
   if (lastfm_disabled)
     return -1;
 
-  return scrobble(id);
+  return posttrack(id, "track.scrobble");
+}
+
+/* Thread: worker */
+int
+lastfm_updatenowplaying(int id)
+{
+  DPRINTF(E_DBG, L_LASTFM, "Got LastFM update now playing request\n");
+
+  // LastFM is disabled because we already tried looking for a session key, but failed
+  if (lastfm_disabled)
+    return -1;
+
+  return posttrack(id, "track.updateNowPlaying");
 }
 
 /* Thread: httpd */
