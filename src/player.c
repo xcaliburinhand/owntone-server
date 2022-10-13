@@ -1093,14 +1093,14 @@ event_play_start()
 {
   DPRINTF(E_DBG, L_PLAYER, "event_play_start()\n");
 
+#ifdef LASTFM
   int id = (int)pb_session.playing_now->id;
 
   if (id != DB_MEDIA_FILE_NON_PERSISTENT_ID)
     {
-#ifdef LASTFM
       worker_execute(lastfm_nowplaying_cb, &id, sizeof(int), 8);
-#endif
     }
+#endif
 
   if (!pb_session.metadata_sent)
     {
