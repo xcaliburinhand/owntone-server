@@ -23,6 +23,10 @@ export default {
     }
   },
 
+  mounted() {
+    navigator.mediaSession.setActionHandler("nexttrack", this.play_next)
+  },
+
   methods: {
     play_next() {
       if (this.disabled) {

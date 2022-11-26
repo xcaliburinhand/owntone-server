@@ -41,6 +41,11 @@ export default {
     }
   },
 
+  mounted() {
+    navigator.mediaSession.setActionHandler("play", this.toggle_play_pause)
+    navigator.mediaSession.setActionHandler("pause", this.toggle_play_pause)
+  },
+
   methods: {
     toggle_play_pause() {
       if (this.disabled) {

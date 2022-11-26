@@ -332,6 +332,21 @@ export default {
       if (this.player.volume > 0) {
         this.old_volume = this.player.volume
       }
+    },
+    '$store.getters.now_playing'() {
+      if ('mediaSession' in navigator) {
+        // flush metadata before updating with new details due to android odditity
+        // without flush android show artwork of previous track
+        navigator.mediaSession.metadata = new MediaMetadata({})
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: this.now_playing.title,
+          artist: this.now_playing.artist,
+          album: this.now_playing.album,
+          artwork: [
+            { src: this.now_playing.artwork_url, sizes: '500x500', type: 'image/jpeg' },
+          ]
+        })
+      }
     }
   },
 

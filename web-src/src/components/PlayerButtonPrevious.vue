@@ -23,6 +23,10 @@ export default {
     }
   },
 
+  mounted() {
+    navigator.mediaSession.setActionHandler("previoustrack", this.play_previous)
+  },
+
   methods: {
     play_previous() {
       if (this.disabled) {
