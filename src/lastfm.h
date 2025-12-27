@@ -16,6 +16,9 @@ lastfm_logout(void);
 int
 lastfm_scrobble(int id);
 
+int
+lastfm_updatenowplaying(int id);
+
 bool
 lastfm_is_enabled(void);
 

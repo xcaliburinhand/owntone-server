@@ -169,11 +169,20 @@ scrobble_cb(void *arg)
 {
   int *id = arg;
 
+  listenbrainz_scrobble(*id);
 #ifdef LASTFM
   lastfm_scrobble(*id);
-#endif
-  listenbrainz_scrobble(*id);
 }
+
+/* Callback from the worker thread (async operation as it may block) */
+static void
+lastfm_nowplaying_cb(void *arg)
+{
+  int *id = arg;
+
+  lastfm_updatenowplaying(*id);
+}
+#endif
 
 static const char *
 content_type_from_ext(const char *ext)
@@ -1217,6 +1226,10 @@ httpd_stream_file(struct httpd_request *hreq, int id)
 #endif
 
   httpd_request_close_cb_set(hreq, stream_fail_cb, st);
+
+#ifdef LASTFM
+  worker_execute(lastfm_nowplaying_cb, &st->id, sizeof(int), 1);
+#endif
 
   DPRINTF(E_INFO, L_HTTPD, "Kicking off streaming for %s\n", mfi->path);
 
