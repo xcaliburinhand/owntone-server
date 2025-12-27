@@ -22,6 +22,9 @@ export default {
       return this.queueStore.isEmpty
     }
   },
+  mounted() {
+    navigator.mediaSession.setActionHandler("nexttrack", this.next)
+  },
   methods: {
     next() {
       player.next()

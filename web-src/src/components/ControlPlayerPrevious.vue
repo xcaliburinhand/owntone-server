@@ -22,6 +22,9 @@ export default {
       return this.queueStore.isEmpty
     }
   },
+  mounted() {
+    navigator.mediaSession.setActionHandler("previoustrack", this.previous)
+  },
   methods: {
     previous() {
       player.previous()
