@@ -112,7 +112,33 @@ export default {
       const { current } = this.queueStore
       return [current.artist, current.album].filter(Boolean).join(' - ')
     }
-  }
+  },
+  watch: {
+    'queueStore.current': {
+      handler(newTrack) {
+        
+        if ('mediaSession' in navigator) {
+          const trackArtwork = []
+          if (newTrack.artwork_url) {
+            trackArtwork.push({
+              src: newTrack.artwork_url,
+              sizes: '512x512',
+              type: 'image/jpeg'
+            })
+          }
+
+          navigator.mediaSession.metadata = new window.MediaMetadata({
+            title: newTrack.title,
+            artist: newTrack.artist,
+            album: newTrack.album,
+            artwork: trackArtwork
+          })
+        }
+      },
+      immediate: true
+    }
+  },
+
 }
 </script>
 

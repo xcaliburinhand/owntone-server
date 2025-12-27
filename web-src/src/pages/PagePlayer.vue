@@ -177,6 +177,15 @@ export default {
     tick() {
       if (!this.isDragged) {
         this.trackProgress += 1
+
+        // Update Media Session position state
+        if ('mediaSession' in navigator && 'setPositionState' in navigator.mediaSession) {
+          navigator.mediaSession.setPositionState({
+            duration: this.track.length_ms / 1000 || 0,
+            playbackRate: this.playerStore.playback_rate || 1,
+            position: this.trackProgress
+          });
+        }
       }
     }
   }

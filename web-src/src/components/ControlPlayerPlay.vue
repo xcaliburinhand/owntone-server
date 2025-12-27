@@ -30,6 +30,20 @@ export default {
       return 'stop'
     }
   },
+  watch: {
+    // Watch for changes in the playback state and sync with Media Session
+    'playerStore.isPlaying': {
+      handler() {
+        this.syncPlaybackState()
+      },
+      immediate: true
+    }
+  },
+  mounted() {
+    navigator.mediaSession.setActionHandler("play", this.toggle)
+    navigator.mediaSession.setActionHandler("pause", this.toggle)
+  },
+
   methods: {
     toggle() {
       if (this.playerStore.isPlaying && this.queueStore.isPauseAllowed) {
@@ -41,6 +55,15 @@ export default {
         player.stop()
       } else {
         player.play()
+      }
+    },
+    syncPlaybackState() {
+      if ('mediaSession' in navigator) {
+        if (this.playerStore.isPlaying) {
+          navigator.mediaSession.playbackState = 'playing'
+        } else {
+          navigator.mediaSession.playbackState = 'paused'
+        }
       }
     }
   }
