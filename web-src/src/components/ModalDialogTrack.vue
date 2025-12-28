@@ -77,6 +77,9 @@ export default {
             key: 'property.added-on',
             value: this.$formatters.toDateTime(this.item.time_added)
           },
+
+          { key: 'property.played', value: [this.item.play_count, this.item.time_played].join(' - ') },
+          { key: 'property.skipped', value: [this.item.skip_count, this.item.time_skipped].join(' - ') },
           {
             key: 'property.rating',
             value: this.$t('dialog.track.rating', {
